@@ -1,6 +1,7 @@
 
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
 
 import sys
 import wlnparser
@@ -82,8 +83,13 @@ if __name__ == "__main__":
 
 	sequences = loader.read_sequences(parser)
 	x_sequences,y_sequences = loader.split_wln_sequences(sequences)
-	x_array,y_array = loader.prepare_training_data(x_sequences,y_sequences)
+	
+	x_array = loader.encode_sequences(x_sequences)
+	y_array = loader.encode_categorical(y_sequences)
 
+	if(opt_debug):
+		sys.stderr.write(f"x data shape: {x_array.shape}\n")
+		sys.stderr.write(f"y data shape: {y_array.shape}\n")
 
 	X_train, X_test, y_train, y_test = train_test_split(x_array, y_array, test_size=0.2, random_state=42)
 
@@ -93,4 +99,4 @@ if __name__ == "__main__":
 	if(opt_debug):
 		rnn.model.summary()
 
-	rnn.model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=epochs)
+	rnn.model.fit(X_train,y_train,validation_data=(X_test,y_test),epochs=epochs,batch_size=64)

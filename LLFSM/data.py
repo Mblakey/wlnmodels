@@ -1,8 +1,14 @@
 # Prepare data for training and testing, if run as main, obtain stats about the inputted
 # data file, else this should be used purely for library functions
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
+
 
 import sys
 import numpy as np
+import tensorflow as tf
+
 from wlnparser import WLNParser
 
 file = ""
@@ -74,9 +80,13 @@ class DataLoader:
 		open_file = open(self.filename,"r")
 		if open_file:
 			sequences = parser.filter_sequences(self.filename)
-			i = 0
+			i = 1
 
 			for line in sequences:
+
+				if(filter_rings and (line[0] == 'L' or line[0] == 'T') ):
+					continue # skip wln rings 
+
 				if len(line.strip()) > self.max_len:
 					self.max_len = len(line.strip())
 
@@ -97,23 +107,6 @@ class DataLoader:
 			return sequences
 		else: 
 			return []
-
-
-	def direct_encode(self,sequences):
-		results  = np.zeros(shape = (len(sequences),
-                  			self.max_len,
-                         max(self.chardict.values()) + 1))
-
-		for i,wln in enumerate(sequences):
-			for j, char in enumerate(wln):
-
-				index = self.chardict[char]
-				results[i,j,index] = 1
-
-		if(opt_debug):
-			sys.stderr.write(f"one hot encoded shape {results.shape}\n")
-		return results
-
 
 
 	def split_wln_sequences(self,sequences):
@@ -137,28 +130,34 @@ class DataLoader:
 		return (x_sequences,y_sequences)
 
 
-	def prepare_training_data(self,x_sequences,y_sequences):
-		y_data  = np.zeros(shape = (len(y_sequences),
-                        max(self.chardict.values()) + 1))
-	
-		for i,char in enumerate(y_sequences):
-			if(char != "nill"):
-				index = self.chardict[char]
-				y_data[i,index] = 1
-				enc_char = self.decode_character(y_data[i])
-				
-				if char != enc_char:
-					sys.stderr.write(f"Error: {char} != {enc_char}\n")
+	def encode_sequences(self,sequence_list):	
+		encoded_sequence_list = []
+		for string in sequence_list:
+			encoded = []
+			for ch in string:
+				encoded.append(self.chardict[ch])
 			
-		x_data = self.direct_encode(x_sequences)
-		return (x_data,y_data)
+			while(len(encoded) < self.max_len):
+				encoded.append(0)
+
+			encoded_sequence_list.append(encoded)
+	
+		return np.array(encoded_sequence_list)
 
 
-	def decode_character(self,oh_array):
-		for i,val in enumerate(oh_array):
-			if(val > 0):
-				return self.inv_chardict[i]
-		return "nill"
+	def encode_categorical(self,sequence_list):
+		categorical = []
+		for string in sequence_list:
+			encoded = [];
+			while(len(encoded) < self.vocab_size):
+				encoded.append(0)
+
+			if string != "nill":
+				encoded[self.chardict[string[0]]] = 1
+			
+			categorical.append(encoded)
+
+		return np.array(categorical)
 
 
 def main():
@@ -167,7 +166,13 @@ def main():
 
 	sequences = dl.read_sequences(parser)
 	x_sequences,y_sequences = dl.split_wln_sequences(sequences)
-	dl.prepare_training_data(x_sequences,y_sequences)
+	
+	x = dl.encode_sequences(x_sequences)
+	y = dl.encode_categorical(y_sequences)
+
+	print(x.shape)
+	print(y.shape)
+	
 	return 0
 
 if __name__ == "__main__":

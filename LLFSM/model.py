@@ -5,7 +5,7 @@ import sys
 import tensorflow as tf
 
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense,GRU,Embedding,Input,Flatten
+from tensorflow.keras.layers import Dense,GRU,Embedding,Bidirectional,Normalization
 
 class RNNModel:
 	
@@ -20,9 +20,10 @@ class RNNModel:
 
 	def create_model(self):
 		self.model = Sequential()
-		self.model.add(Embedding(self.vocab_size,self.embed_dim,input_length=self.max_len))
-		self.model.add(Flatten())
-		#self.model.add(GRU(128)) 
+		self.model.add(Embedding(self.vocab_size, 128, input_length=self.max_len))
+		self.model.add(Bidirectional(GRU(128,return_sequences=True)))
+		self.model.add(Normalization())
+		self.model.add(GRU(128))
 		self.model.add(Dense(self.vocab_size,activation="softmax")) 
 		self.model.compile(optimizer='adam',loss = "categorical_crossentropy", metrics=['accuracy'])
 		return self.model
