@@ -109,7 +109,8 @@ class DataLoader:
 				index = self.chardict[char]
 				results[i,j,index] = 1
 
-		sys.stderr.write(f"data loader: one hot encoded shape {results.shape}\n")
+		if(opt_debug):
+			sys.stderr.write(f"data loader: one hot encoded shape {results.shape}\n")
 		return results
 
 
