@@ -100,3 +100,9 @@ if __name__ == "__main__":
 		rnn.model.summary()
 
 	rnn.model.fit(X_train,y_train,validation_data=(X_test,y_test),epochs=epochs,batch_size=64)
+
+
+	if(opt_debug):
+		sys.stderr.write(f"saving weights to ./checkpoints\n")
+
+	rnn.model.save_weights('./checkpoints/rnn_checkpoints')

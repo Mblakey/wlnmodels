@@ -19,11 +19,15 @@ class RNNModel:
 		self.max_len = max_len
 
 	def create_model(self):
+		'''
+		baby model for testing the input sizes and intial sequence testing
+		'''
+
 		self.model = Sequential()
-		self.model.add(Embedding(self.vocab_size, 128, input_length=self.max_len))
-		self.model.add(Bidirectional(GRU(128,return_sequences=True)))
+		self.model.add(Embedding(self.vocab_size, 1024, input_length=self.max_len))
+		self.model.add(Bidirectional(GRU(256,return_sequences=True)))
+		self.model.add(GRU(128,dropout=0.5))
 		self.model.add(Normalization())
-		self.model.add(GRU(128))
 		self.model.add(Dense(self.vocab_size,activation="softmax")) 
 		self.model.compile(optimizer='adam',loss = "categorical_crossentropy", metrics=['accuracy'])
 		return self.model
