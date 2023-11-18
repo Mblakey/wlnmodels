@@ -85,9 +85,8 @@ class DataLoader:
 						i+=1
 
 			if(opt_debug):
-				sys.stderr.write(f"data loader: {len(sequences)} lines read\n")
-				sys.stderr.write(f"data loader: {self.max_len} max length\n")
-				sys.stderr.write(f"data loader: {len(self.chardict)} chars in character set\n")
+				sys.stderr.write(f"{len(sequences)} lines read, {self.max_len} max length\n")
+				sys.stderr.write(f"{len(self.chardict)} chars in character set\n")
 
 			# create an inverse map for predicition reading 
 			self.inv_chardict = {v: k for k,v in self.chardict.items()}
@@ -110,7 +109,7 @@ class DataLoader:
 				results[i,j,index] = 1
 
 		if(opt_debug):
-			sys.stderr.write(f"data loader: one hot encoded shape {results.shape}\n")
+			sys.stderr.write(f"one hot encoded shape {results.shape}\n")
 		return results
 
 
@@ -131,7 +130,7 @@ class DataLoader:
 					y_sequences.append(wln_string[i:i+1])
 
 		if(opt_debug):
-			sys.stderr.write(f"data loader: {len(x_sequences)} training sequences\n")
+			sys.stderr.write(f"{len(x_sequences)} training sequences\n")
 
 		return (x_sequences,y_sequences)
 

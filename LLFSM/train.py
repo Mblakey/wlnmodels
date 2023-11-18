@@ -1,4 +1,7 @@
 
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+
 import sys
 import numpy as np
 import wlnparser
@@ -67,6 +70,8 @@ def ProcessCommandLine():
 
 
 if __name__ == "__main__":
+	sys.stderr.write(f"TensorFlow version: {tf.__version__}\n")
+
 	ProcessCommandLine()
 	
 	parser = WLNParser(parser_path)
