@@ -53,21 +53,23 @@ def ProcessCommandLine():
 	return;
 
 
-"""
-Transform sequence data and perform the one hot encode as preperation
-assumes that the data has been prepared for a given task
-
-https://medium.com/analytics-vidhya/one-hot-encoding-of-text-data-in-natural-language-processing-2242fefb2148
-"""
 class DataLoader:
+	"""
+	Transform sequence data and perform the one hot encode as preperation
+	assumes that the data has been prepared for a given task
+
+	https://medium.com/analytics-vidhya/one-hot-encoding-of-text-data-in-natural-language-processing-2242fefb2148
+	"""
+
 	filename = ""
 	chardict = {}
+	inv_chardict = {}
 	max_len = 0
 
 	def __init__(self,file):
 		self.filename = file 
 
-	def read_sequences(self,parser):
+	def read_sequences(self,parser, filter_rings=False):
 		open_file = open(self.filename,"r")
 		if open_file:
 			sequences = parser.filter_sequences(self.filename)
@@ -87,10 +89,14 @@ class DataLoader:
 				sys.stderr.write(f"data loader: {self.max_len} max length\n")
 				sys.stderr.write(f"data loader: {len(self.chardict)} chars in character set\n")
 
+			# create an inverse map for predicition reading 
+			self.inv_chardict = {v: k for k,v in self.chardict.items()}
+			
 			open_file.close()
 			return sequences
 		else: 
 			return []
+
 
 	def direct_encode(self,sequences):
 		results  = np.zeros(shape = (len(sequences),
@@ -107,13 +113,59 @@ class DataLoader:
 		return results
 
 
+
+	def split_wln_sequences(self,sequences):
+		'''
+		takes the wln sequences, splits them into predicting the next char
+		'''
+		x_sequences = []
+		y_sequences = []
+		for wln_string in sequences:
+			for i in range(len(wln_string),0,-1):
+				x_sequences.append(wln_string[:i])
+
+				if wln_string[i:i+1] == "":
+					y_sequences.append("nill")
+				else:
+					y_sequences.append(wln_string[i:i+1])
+
+		if(opt_debug):
+			sys.stderr.write(f"data loader: {len(x_sequences)} training sequences\n")
+
+		return (x_sequences,y_sequences)
+
+
+	def prepare_training_data(self,x_sequences,y_sequences):
+		y_data  = np.zeros(shape = (len(y_sequences),
+                        max(self.chardict.values()) + 1))
+	
+		for i,char in enumerate(y_sequences):
+			if(char != "nill"):
+				index = self.chardict[char]
+				y_data[i,index] = 1
+				enc_char = self.decode_character(y_data[i])
+				
+				if char != enc_char:
+					sys.stderr.write(f"Error: {char} != {enc_char}\n")
+			
+		x_data = self.direct_encode(x_sequences)
+		return (x_data,y_data)
+
+
+	def decode_character(self,oh_array):
+		for i,val in enumerate(oh_array):
+			if(val > 0):
+				return self.inv_chardict[i]
+		return "nill"
+
+
 def main():
 	dl = DataLoader(file)
 	parser = WLNParser(parser_path)
 
 	sequences = dl.read_sequences(parser)
-	dl.direct_encode(sequences)
-
+	x_sequences,y_sequences = dl.split_wln_sequences(sequences)
+	dl.prepare_training_data(x_sequences,y_sequences)
 	return 0
 
 if __name__ == "__main__":
