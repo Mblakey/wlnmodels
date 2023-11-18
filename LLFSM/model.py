@@ -4,22 +4,26 @@
 import sys
 import tensorflow as tf
 
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense,GRU,Embedding,Input,Flatten
+
 class RNNModel:
 	
-	input_shape = ()
-	def __init__(self, xshape,yshape):
-		self.input_shape = (xshape,yshape)
+	model = 0
+	vocab_size = 0
+	embed_dim = 64
+	max_len = 0
 
+	def __init__(self, vocab_size,max_len):
+		self.vocab_size = vocab_size
+		self.max_len = max_len
 
-	def build():
-		return True
+	def create_model(self):
+		self.model = Sequential()
+		self.model.add(Embedding(self.vocab_size,self.embed_dim,input_length=self.max_len))
+		self.model.add(Flatten())
+		#self.model.add(GRU(128)) 
+		self.model.add(Dense(self.vocab_size,activation="softmax")) 
+		self.model.compile(optimizer='adam',loss = "categorical_crossentropy", metrics=['accuracy'])
+		return self.model
 
-
-
-def main():
-	print(tf.config.list_physical_devices('GPU'))
-	model = RNNModel(10,20)
-	return 0
-
-if __name__ == "__main__":
-	main() 

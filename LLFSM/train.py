@@ -3,15 +3,18 @@ import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 import sys
-import numpy as np
 import wlnparser
 import data
 
-import tensorflow as tf
 import sklearn
+import numpy as np
+import tensorflow as tf
+
+from sklearn.model_selection import train_test_split
 
 from wlnparser import WLNParser
 from data import DataLoader
+from model import RNNModel
 
 file = ""
 parser_path = ""
@@ -81,3 +84,13 @@ if __name__ == "__main__":
 	x_sequences,y_sequences = loader.split_wln_sequences(sequences)
 	x_array,y_array = loader.prepare_training_data(x_sequences,y_sequences)
 
+
+	X_train, X_test, y_train, y_test = train_test_split(x_array, y_array, test_size=0.2, random_state=42)
+
+	rnn = RNNModel(loader.vocab_size,loader.max_len)
+	rnn.create_model()
+
+	if(opt_debug):
+		rnn.model.summary()
+
+	rnn.model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=epochs)

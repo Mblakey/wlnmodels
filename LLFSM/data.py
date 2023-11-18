@@ -65,6 +65,7 @@ class DataLoader:
 	chardict = {}
 	inv_chardict = {}
 	max_len = 0
+	vocab_size = 0
 
 	def __init__(self,file):
 		self.filename = file 
@@ -90,6 +91,7 @@ class DataLoader:
 
 			# create an inverse map for predicition reading 
 			self.inv_chardict = {v: k for k,v in self.chardict.items()}
+			self.vocab_size = len(self.chardict)+1
 			
 			open_file.close()
 			return sequences
