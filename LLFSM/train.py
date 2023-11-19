@@ -103,11 +103,14 @@ if __name__ == "__main__":
 
 	X_train, X_test, y_train, y_test = train_test_split(x_array, y_array, test_size=0.2, random_state=42)
 	
+	del sequences
+	del x_sequences
+	del y_sequences
 	del x_array
 	del y_array
 	gc.collect()
 
-	batch_size = 64
+	batch_size = 8
 	train_data = tf.data.Dataset.from_tensor_slices((X_train,y_train))
 	test_data = tf.data.Dataset.from_tensor_slices((X_test,y_test))
 
@@ -115,9 +118,9 @@ if __name__ == "__main__":
 	del y_train
 	del X_test
 	del y_test
-	gc.collect()
+	gc.collect() # need to manually collect release the memory
 
-	train = train_data.shuffle(buffer_size=10000).batch(batch_size)
+	train = train_data.shuffle(buffer_size=1024).batch(batch_size)
 	test = test_data.batch(batch_size)
 
 	rnn = RNNModel(loader.vocab_size,loader.max_len)
