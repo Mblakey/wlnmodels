@@ -11,7 +11,7 @@ class WLNParser:
 	def __init__(self,parser_path):
 		self.path = parser_path
 
-	def filter_sequences(self,inp_file):
+	def filter_sequences(self,inp_file, filter_rings=False):
 		if(self.path == ""):
 			sys.stderr.write("path to wln parser <bin> not set\n")
 			return 0
@@ -23,7 +23,11 @@ class WLNParser:
 		lines = p.stdout.splitlines()
 		for line in lines:
 			result = ansi_escape.sub('', line)
-			sequences.append(result)
+
+			if filter_rings and (result[0] == 'L' or result[0] == 'T'):
+				continue # skip wln rings 
+			else:
+				sequences.append(result)
 
 		return sequences
 

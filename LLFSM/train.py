@@ -21,11 +21,16 @@ file = ""
 parser_path = ""
 epochs = 5
 
+
+opt_debug = 0
+opt_remove_rings = 0
+
 def DisplayUsage():
 	sys.stderr.write("python train.py <options> <file> <parser bin>\n")
 	sys.stderr.write("options:\n")
 	sys.stderr.write("-d | --debug	display debugging to stderr\n")
 	sys.stderr.write("-h | --help	display a verbose help menu\n")
+	sys.stderr.write("-r | --remove-rings		remove cycles from the wln data\n")
 	sys.stderr.write("-e=<int> | --epochs=<int>	set number of epochs, default is 5\n")
 	exit(1)
 
@@ -35,8 +40,9 @@ def ProcessCommandLine():
 	global file
 	global parser_path
 	global epochs
-
 	global opt_debug
+	global opt_remove_rings
+
 
 	for arg in sys.argv[1:]:
 		if(arg[0] == '-'):
@@ -45,6 +51,8 @@ def ProcessCommandLine():
 			elif arg == '-d' or arg == '--debug':
 				opt_debug = 1
 				data.opt_debug = 1
+			elif arg == '-r' or arg == '--remove-rings':
+				opt_remove_rings = 1
 			elif arg[0:3] == "-e=":
 				epochs = int(arg[3:])
 			elif arg[0:9] == "--epochs=":
@@ -81,7 +89,7 @@ if __name__ == "__main__":
 	parser = WLNParser(parser_path)
 	loader = DataLoader(file)
 
-	sequences = loader.read_sequences(parser)
+	sequences = loader.read_sequences(parser,opt_remove_rings)
 	x_sequences,y_sequences = loader.split_wln_sequences(sequences)
 	
 	x_array = loader.encode_sequences(x_sequences)

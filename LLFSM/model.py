@@ -24,11 +24,12 @@ class RNNModel:
 		'''
 
 		self.model = Sequential()
-		self.model.add(Embedding(self.vocab_size, 1024, input_length=self.max_len))
-		self.model.add(Bidirectional(GRU(256,return_sequences=True)))
+		self.model.add(Embedding(self.vocab_size, 512, input_length=self.max_len))
+		# self.model.add(Bidirectional(GRU(256,return_sequences=True)))
 		self.model.add(GRU(128,dropout=0.5))
 		self.model.add(Normalization())
 		self.model.add(Dense(self.vocab_size,activation="softmax")) 
 		self.model.compile(optimizer='adam',loss = "categorical_crossentropy", metrics=['accuracy'])
 		return self.model
 
+		

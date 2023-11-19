@@ -14,11 +14,13 @@ from wlnparser import WLNParser
 file = ""
 parser_path = ""
 opt_debug = 0
+opt_remove_rings = 0
 
 
 def DisplayUsage():
 	sys.stderr.write("python data.py <options> <file> <parser bin>\n")
 	sys.stderr.write("options:\n")
+	sys.stderr.write("-r | --remove-rings		remove cycles from the wln data\n")
 	sys.stderr.write("-d | --debug		display debugging to stderr\n")
 	sys.stderr.write("-h | --help			display a verbose help menu\n")
 	exit(1)
@@ -28,6 +30,7 @@ def ProcessCommandLine():
 	global file
 	global parser_path
 	global opt_debug
+	global opt_remove_rings
 
 	for arg in sys.argv[1:]:
 		if(arg[0] == '-'):
@@ -35,6 +38,8 @@ def ProcessCommandLine():
 				sys.stderr.write("help")
 			elif arg == '-d' or arg == '--debug':
 				opt_debug = 1
+			elif arg == '-r' or arg == '--remove-rings':
+				opt_remove_rings = 1
 			else:
 				sys.stderr.write(f"Error: {arg} not recognised as argument\n")
 				DisplayUsage()
@@ -77,15 +82,16 @@ class DataLoader:
 		self.filename = file 
 
 	def read_sequences(self,parser, filter_rings=False):
+		
+		if(filter_rings):
+			sys.stderr.write("removing rings from the wln data\n")
+
 		open_file = open(self.filename,"r")
 		if open_file:
-			sequences = parser.filter_sequences(self.filename)
+			sequences = parser.filter_sequences(self.filename,filter_rings)
 			i = 1
 
 			for line in sequences:
-
-				if(filter_rings and (line[0] == 'L' or line[0] == 'T') ):
-					continue # skip wln rings 
 
 				if len(line.strip()) > self.max_len:
 					self.max_len = len(line.strip())
@@ -116,13 +122,9 @@ class DataLoader:
 		x_sequences = []
 		y_sequences = []
 		for wln_string in sequences:
-			for i in range(len(wln_string),0,-1):
+			for i in range(len(wln_string)-1,0,-1): # ensures we always predict a character
 				x_sequences.append(wln_string[:i])
-
-				if wln_string[i:i+1] == "":
-					y_sequences.append("nill")
-				else:
-					y_sequences.append(wln_string[i:i+1])
+				y_sequences.append(wln_string[i:i+1])
 
 		if(opt_debug):
 			sys.stderr.write(f"{len(x_sequences)} training sequences\n")
@@ -164,7 +166,7 @@ def main():
 	dl = DataLoader(file)
 	parser = WLNParser(parser_path)
 
-	sequences = dl.read_sequences(parser)
+	sequences = dl.read_sequences(parser,opt_remove_rings)
 	x_sequences,y_sequences = dl.split_wln_sequences(sequences)
 	
 	x = dl.encode_sequences(x_sequences)
