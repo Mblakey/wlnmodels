@@ -3,6 +3,7 @@ import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
 
+import gc
 import sys
 import wlnparser
 import data
@@ -99,7 +100,25 @@ if __name__ == "__main__":
 		sys.stderr.write(f"x data shape: {x_array.shape}\n")
 		sys.stderr.write(f"y data shape: {y_array.shape}\n")
 
+
 	X_train, X_test, y_train, y_test = train_test_split(x_array, y_array, test_size=0.2, random_state=42)
+	
+	del x_array
+	del y_array
+	gc.collect()
+
+	batch_size = 64
+	train_data = tf.data.Dataset.from_tensor_slices((X_train,y_train))
+	test_data = tf.data.Dataset.from_tensor_slices((X_test,y_test))
+
+	del X_train
+	del y_train
+	del X_test
+	del y_test
+	gc.collect()
+
+	train = train_data.shuffle(buffer_size=10000).batch(batch_size)
+	test = test_data.batch(batch_size)
 
 	rnn = RNNModel(loader.vocab_size,loader.max_len)
 	rnn.create_model()
@@ -107,7 +126,7 @@ if __name__ == "__main__":
 	if(opt_debug):
 		rnn.model.summary()
 
-	rnn.model.fit(X_train,y_train,validation_data=(X_test,y_test),epochs=epochs,batch_size=64)
+	rnn.model.fit(train,validation_data=test,epochs=epochs)
 
 
 	if(opt_debug):

@@ -127,7 +127,7 @@ class DataLoader:
 				y_sequences.append(wln_string[i:i+1])
 
 		if(opt_debug):
-			sys.stderr.write(f"{len(x_sequences)} training sequences\n")
+			sys.stderr.write(f"{len(x_sequences)} sequences\n")
 
 		return (x_sequences,y_sequences)
 
